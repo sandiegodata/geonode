@@ -27,6 +27,7 @@ services:
   #     - DEBUG=True
 
   geoserver:
+    build: .
     environment:
       - GEONODE_LB_HOST_IP=localhost
       - GEONODE_LB_PORT=80
