@@ -45,10 +45,10 @@ services:
     command: celery worker --app=geonode.celery_app:app -B -l INFO
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+        ./docker-environment.env
     environment:
       - GEONODE_INSTANCE_NAME=geonode
-      - GEONODE_LB_HOST_IP=localhost
-      - GEONODE_LB_PORT=80
       - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
       - DEFAULT_BACKEND_DATASTORE=datastore
       - GEONODE_DATABASE=geonode
@@ -62,9 +62,7 @@ services:
       - CELERY_CMD=celery worker --app=geonode.celery_app:app -B -l INFO
       - IS_CELERY=true
       - C_FORCE_ROOT=1
-      - GEOSERVER_PUBLIC_LOCATION=http://geonode/geoserver/
-      - GEOSERVER_LOCATION=http://geonode/geoserver/
-      - SITEURL=http://geonode/
+
 
   data-dir-conf:
     image: geonode/geoserver_data:2.13.x
@@ -93,12 +91,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - geoserver-data-dir:/geoserver_data/data
+    env_file:
+        ./docker-environment.env
     environment:
-      - GEONODE_LB_HOST_IP=localhost
-      - GEONODE_LB_PORT=80
       - DOCKERHOST
       - GEONODE_HOST_IP
-      - PUBLIC_PORT=80
       - DOCKER_HOST_IP
 
   django:
@@ -113,15 +110,14 @@ services:
     depends_on:
       - db
       - rabbitmq
-    # command: paver start_django -b 0.0.0.0:8000
     command: uwsgi --ini uwsgi.ini
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - geoserver-data-dir:/geoserver_data/data
+    env_file:
+        ./docker-environment.env
     environment:
       - GEONODE_INSTANCE_NAME=geonode
-      - GEONODE_LB_HOST_IP=localhost
-      - GEONODE_LB_PORT=80
       - DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
       - DEFAULT_BACKEND_DATASTORE=datastore
       - GEONODE_DATABASE=geonode
@@ -130,15 +126,11 @@ services:
       - GEONODE_GEODATABASE_PASSWORD=geonode_data
       - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
       - DJANGO_SETTINGS_MODULE=geonode.settings
-      - ALLOWED_HOSTS=['django',]
+      - ALLOWED_HOSTS=['django','gis.sandiegodata.org']
       - DOCKER_ENV=production
       - UWSGI_CMD=uwsgi --ini /usr/src/app/uwsgi.ini
       - IS_CELERY=false
       - C_FORCE_ROOT=1
-      - GEOSERVER_PUBLIC_LOCATION=http://geonode/geoserver/
-      - GEOSERVER_LOCATION=http://geonode/geoserver/
-      - SITEURL=http://geonode/
-
   geonode:
     image: geonode/nginx:geoserver
     restart: unless-stopped
